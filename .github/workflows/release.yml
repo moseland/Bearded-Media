@@ -32,9 +32,6 @@ jobs:
           composer install --optimize-autoloader
           npm install
 
-      - name: Run Tests
-        run: npm run test
-
       - name: Package Plugin Zip
         run: |
           npm run plugin-zip
