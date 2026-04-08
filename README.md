@@ -1,13 +1,12 @@
 # Bearded Media
 
-Bearded Media is a WordPress plugin designed to improve media management through AI-powered optimization and vision-based automation. It streamlines the workflow for uploading, tagging, and editing media directly within the WordPress dashboard.
+Bearded Media is a WordPress plugin designed to bring generative AI tools to the WordPress media library. It has an advanced editor for quickly editing images, and a vision-based auto-tagging system for automatically tagging images. Allows for bulk operations, and auto resizing/opitimization on upload.
 
 ## Key Features
 
 -   **Client-Side Optimization**: Automatically optimize images before they are uploaded to the server, reducing server load and storage requirements.
 -   **Vision-Based Auto-Tagging**: Leverages AI to analyze images during upload and automatically generate descriptive alt text, titles, and tags.
 -   **Generative Editing**: Advanced generative AI tools integrated into the media editor for seamless background removal, content-aware fills, and style adjustments.
--   **High-Volume Readiness**: Built for performance with asynchronous processing and robust error handling for large media libraries.
 -   **Developer Friendly**: Fully extensible via hooks and filters, with a clean PSR-4 compliant architecture.
 
 ## Requirements
