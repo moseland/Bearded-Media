@@ -3,7 +3,7 @@
  * Plugin Name:       Bearded Media
  * Plugin URI:        https://matt.ose.land
  * Description:       AI Media Tools for WordPress. Features client-side optimization, vision-based auto-tagging, and generative editing.
- * Version:           2.0.0
+ * Version:           1.0.0
  * Author:            Matthew Oseland
  * Author URI:        https://matt.ose.land
  * Text Domain:       bearded-media

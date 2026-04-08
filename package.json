@@ -1,6 +1,6 @@
 {
 	"name": "bearded-media",
-	"version": "2.0.0",
+	"version": "1.0.0",
 	"description": "AI Media Tools for WordPress. Features client-side optimization, vision-based auto-tagging, and generative editing.",
 	"scripts": {
 		"build": "wp-scripts build",

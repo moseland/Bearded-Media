@@ -1,7 +1,7 @@
 {
 	"name": "moseland/bearded-media",
 	"description": "AI Media Tools for WordPress. Features client-side optimization, vision-based auto-tagging, and generative editing.",
-	"version": "2.0.0",
+	"version": "1.0.0",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
 	"authors": [
