@@ -1,0 +1,52 @@
+name: Generate Plugin Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          cache: 'composer'
+
+      - name: Install Dependencies (PHP & JS)
+        run: |
+          composer install --no-dev --optimize-autoloader
+          npm install
+
+      - name: Run Tests
+        run: npm run test
+
+      - name: Package Plugin Zip
+        run: |
+          npm run plugin-zip
+          mv bearded-media.zip bearded-media-${{ github.ref_name }}.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: bearded-media-${{ github.ref_name }}.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

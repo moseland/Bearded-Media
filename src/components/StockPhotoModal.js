@@ -70,7 +70,11 @@ const StockPhotoModal = ( { isOpen, onClose, onSuccess } ) => {
 				onClose();
 			}
 		} catch ( e ) {
-			alert( 'Import failed: ' + e.message );
+			console.error( 'Bearded Media: Pexels Import Error', e );
+			alert(
+				'Import failed: ' +
+					( e.message || 'Unknown error. check console.' )
+			);
 		} finally {
 			setIsImporting( false );
 		}

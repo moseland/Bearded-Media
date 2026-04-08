@@ -11,8 +11,14 @@ const App = () => {
 		auto_alt: false,
 		seo_rename: false,
 		auto_webp: false,
+		resize_enabled: true,
+		strip_metadata: false,
+		auto_upscale: false,
 		max_width: 2500,
 		max_height: 2500,
+		upscale_min_width: 1000,
+		upscale_min_height: 1000,
+		upscale_mode: 'contain',
 	} );
 
 	const [ apiKeys, setApiKeys ] = useState( {
@@ -25,6 +31,7 @@ const App = () => {
 	const [ isLoading, setIsLoading ] = useState( true );
 	const [ isSaving, setIsSaving ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
+	const [ activeTab, setActiveTab ] = useState( 'pipelines' );
 
 	/**
 	 * Fetch settings on mount.
@@ -32,11 +39,14 @@ const App = () => {
 	 */
 	useEffect( () => {
 		const fetchSettings = async () => {
+			console.log( '--- DEBUG: Fetching Settings ---' );
 			try {
 				// Accessing settings registered with 'show_in_rest' => true in PHP
 				const wpSettings = await apiFetch( {
 					path: '/wp/v2/settings',
 				} );
+
+				console.log( '--- DEBUG: Fetch Response ---', wpSettings );
 
 				if ( wpSettings ) {
 					setSettings( {
@@ -49,12 +59,30 @@ const App = () => {
 						auto_webp:
 							wpSettings.bearded_media_settings?.auto_webp ??
 							false,
+						resize_enabled:
+							wpSettings.bearded_media_settings?.resize_enabled ??
+							true,
+						strip_metadata:
+							wpSettings.bearded_media_settings?.strip_metadata ??
+							false,
+						auto_upscale:
+							wpSettings.bearded_media_settings?.auto_upscale ??
+							false,
 						max_width:
 							wpSettings.bearded_media_settings?.max_width ??
 							2500,
 						max_height:
 							wpSettings.bearded_media_settings?.max_height ??
 							2500,
+						upscale_min_width:
+							wpSettings.bearded_media_settings
+								?.upscale_min_width ?? 1000,
+						upscale_min_height:
+							wpSettings.bearded_media_settings
+								?.upscale_min_height ?? 1000,
+						upscale_mode:
+							wpSettings.bearded_media_settings?.upscale_mode ??
+							'contain',
 					} );
 
 					setApiKeys( {
@@ -70,6 +98,7 @@ const App = () => {
 					} );
 				}
 			} catch ( err ) {
+				console.error( '--- DEBUG: Fetch Error ---', err );
 				setNotice( {
 					type: 'error',
 					message: __(
@@ -87,20 +116,30 @@ const App = () => {
 
 	/**
 	 * Persist settings to the database.
+	 *
+	 * @param {Event} e The form submission event.
 	 */
-	const handleSave = async () => {
+	const handleSave = async ( e ) => {
+		if ( e && e.preventDefault ) {
+			e.preventDefault();
+		}
 		setIsSaving( true );
 		setNotice( null );
 
+		const payload = {
+			bearded_media_settings: settings,
+			bearded_media_api_keys: apiKeys,
+		};
+		console.log( '--- DEBUG: Saving Settings Payload ---', payload );
+
 		try {
-			await apiFetch( {
+			const response = await apiFetch( {
 				path: '/wp/v2/settings',
 				method: 'POST',
-				data: {
-					bearded_media_settings: settings,
-					bearded_media_api_keys: apiKeys,
-				},
+				data: payload,
 			} );
+
+			console.log( '--- DEBUG: Save Response ---', response );
 
 			setNotice( {
 				type: 'success',
@@ -110,6 +149,7 @@ const App = () => {
 				),
 			} );
 		} catch ( error ) {
+			console.error( '--- DEBUG: Save Error ---', error );
 			setNotice( {
 				type: 'error',
 				message:
@@ -147,18 +187,6 @@ const App = () => {
 			<header>
 				<div>
 					<h1>{ __( 'Bearded Media', 'bearded-media' ) }</h1>
-					<p>
-						{ __(
-							'Enterprise AI Asset Orchestration',
-							'bearded-media'
-						) }
-					</p>
-				</div>
-				<div className="version-info">
-					<span className="badge">v2.1.0-stable</span>
-					<span className="psr-note">
-						{ __( 'PSR-4 Compliant Backend', 'bearded-media' ) }
-					</span>
 				</div>
 			</header>
 
@@ -192,9 +220,35 @@ const App = () => {
 				) }
 			</div>
 
-			<div className="grid-layout">
-				{ /* Main Logic */ }
-				<div className="main-content">
+			<div className="bearded-tabs-nav">
+				<button
+					className={ `tab-btn ${
+						activeTab === 'pipelines' ? 'active' : ''
+					}` }
+					onClick={ () => setActiveTab( 'pipelines' ) }
+				>
+					{ __( 'Pipelines', 'bearded-media' ) }
+				</button>
+				<button
+					className={ `tab-btn ${
+						activeTab === 'constraints' ? 'active' : ''
+					}` }
+					onClick={ () => setActiveTab( 'constraints' ) }
+				>
+					{ __( 'Constraints', 'bearded-media' ) }
+				</button>
+				<button
+					className={ `tab-btn ${
+						activeTab === 'credentials' ? 'active' : ''
+					}` }
+					onClick={ () => setActiveTab( 'credentials' ) }
+				>
+					{ __( 'Credentials', 'bearded-media' ) }
+				</button>
+			</div>
+
+			<div className="tab-content">
+				{ activeTab === 'pipelines' && (
 					<SectionCard
 						title={ __( 'Automated Pipelines', 'bearded-media' ) }
 						icon={ <BoltIcon /> }
@@ -207,7 +261,7 @@ const App = () => {
 									'bearded-media'
 								) }
 								description={ __(
-									'Leverage Gemini Pro to describe images for accessibility and search indices automatically on upload.',
+									'Leverage Gemini to describe images for accessibility and search indices automatically on upload.',
 									'bearded-media'
 								) }
 							>
@@ -227,7 +281,7 @@ const App = () => {
 									'bearded-media'
 								) }
 								description={ __(
-									'Analyze content and rename server files to SEO-friendly slugs. Essential for high-traffic content strategies.',
+									'Analyze content and rename server files to SEO-friendly slugs.',
 									'bearded-media'
 								) }
 								warning={ __(
@@ -263,57 +317,230 @@ const App = () => {
 									}
 								/>
 							</SettingRow>
+							<SettingRow
+								id="strip_metadata"
+								label={ __(
+									'Privacy & Optimization',
+									'bearded-media'
+								) }
+								description={ __(
+									'Strip EXIF metadata (GPS, Camera info) from images before upload.',
+									'bearded-media'
+								) }
+							>
+								<Toggle
+									id="strip_metadata"
+									checked={ settings.strip_metadata }
+									onChange={ ( val ) =>
+										updateSetting( 'strip_metadata', val )
+									}
+								/>
+							</SettingRow>
+							<SettingRow
+								id="auto_upscale"
+								label={ __( 'AI Upscaling', 'bearded-media' ) }
+								description={ __(
+									'Automatically upscale low-resolution images using Stability AI.',
+									'bearded-media'
+								) }
+							>
+								<Toggle
+									id="auto_upscale"
+									checked={ settings.auto_upscale }
+									onChange={ ( val ) =>
+										updateSetting( 'auto_upscale', val )
+									}
+								/>
+							</SettingRow>
 						</div>
 					</SectionCard>
+				) }
 
+				{ activeTab === 'constraints' && (
 					<SectionCard
 						title={ __( 'Media Constraints', 'bearded-media' ) }
 						icon={ <ScaleIcon /> }
 					>
-						<div className="grid-2-col">
-							<InputField
-								id="max_width"
+						<div className="pipelines-stack">
+							<SettingRow
+								id="resize_enabled"
 								label={ __(
-									'Global Max Width (px)',
+									'Enable Client-Side Resizing',
 									'bearded-media'
 								) }
-								value={ settings.max_width }
-								onChange={ ( val ) =>
-									updateSetting(
-										'max_width',
-										parseInt( val ) || 0
-									)
-								}
-							/>
-							<InputField
-								id="max_height"
-								label={ __(
-									'Global Max Height (px)',
+								description={ __(
+									'Resize images in the browser before upload to save bandwidth and server space.',
 									'bearded-media'
 								) }
-								value={ settings.max_height }
-								onChange={ ( val ) =>
-									updateSetting(
-										'max_height',
-										parseInt( val ) || 0
-									)
-								}
-							/>
+							>
+								<Toggle
+									id="resize_enabled"
+									checked={ settings.resize_enabled }
+									onChange={ ( val ) =>
+										updateSetting( 'resize_enabled', val )
+									}
+								/>
+							</SettingRow>
 						</div>
-					</SectionCard>
-				</div>
 
-				{ /* API Sidebar */ }
-				<div className="sidebar">
+						{ settings.resize_enabled && (
+							<div
+								className="grid-2-col"
+								style={ { marginTop: '20px' } }
+							>
+								<InputField
+									id="max_width"
+									label={ __(
+										'Max Width (px)',
+										'bearded-media'
+									) }
+									value={ settings.max_width }
+									onChange={ ( val ) =>
+										updateSetting(
+											'max_width',
+											parseInt( val ) || 0
+										)
+									}
+								/>
+								<InputField
+									id="max_height"
+									label={ __(
+										'Max Height (px)',
+										'bearded-media'
+									) }
+									value={ settings.max_height }
+									onChange={ ( val ) =>
+										updateSetting(
+											'max_height',
+											parseInt( val ) || 0
+										)
+									}
+								/>
+							</div>
+						) }
+
+						{ settings.auto_upscale && (
+							<div
+								className="upscale-config"
+								style={ {
+									marginTop: '20px',
+									padding: '20px',
+									background: 'rgba(0,0,0,0.03)',
+									borderRadius: '8px',
+								} }
+							>
+								<h3
+									style={ {
+										fontSize: '0.875rem',
+										fontWeight: '600',
+										marginBottom: '15px',
+									} }
+								>
+									{ __(
+										'Upscaling Constraints',
+										'bearded-media'
+									) }
+								</h3>
+								<div className="grid-2-col">
+									<InputField
+										id="upscale_min_width"
+										label={ __(
+											'Min Width (px)',
+											'bearded-media'
+										) }
+										value={ settings.upscale_min_width }
+										onChange={ ( val ) =>
+											updateSetting(
+												'upscale_min_width',
+												parseInt( val ) || 0
+											)
+										}
+									/>
+									<InputField
+										id="upscale_min_height"
+										label={ __(
+											'Min Height (px)',
+											'bearded-media'
+										) }
+										value={ settings.upscale_min_height }
+										onChange={ ( val ) =>
+											updateSetting(
+												'upscale_min_height',
+												parseInt( val ) || 0
+											)
+										}
+									/>
+								</div>
+								<div
+									className="input-field"
+									style={ { marginTop: '15px' } }
+								>
+									<label htmlFor="upscale_mode">
+										{ __(
+											'Upscale Mode',
+											'bearded-media'
+										) }
+									</label>
+									<select
+										id="upscale_mode"
+										value={ settings.upscale_mode }
+										onChange={ ( e ) =>
+											updateSetting(
+												'upscale_mode',
+												e.target.value
+											)
+										}
+										style={ {
+											width: '100%',
+											padding: '8px',
+											borderRadius: '4px',
+											border: '1px solid #ddd',
+										} }
+									>
+										<option value="contain">
+											{ __(
+												'Contain (Maintain Aspect Ratio)',
+												'bearded-media'
+											) }
+										</option>
+										<option value="cover">
+											{ __(
+												'Cover (Crop to Fit)',
+												'bearded-media'
+											) }
+										</option>
+										<option value="gen-fill">
+											{ __(
+												'Contain with Generative Fill (Expand)',
+												'bearded-media'
+											) }
+										</option>
+									</select>
+								</div>
+							</div>
+						) }
+					</SectionCard>
+				) }
+
+				{ activeTab === 'credentials' && (
 					<SectionCard
 						title={ __( 'Service Credentials', 'bearded-media' ) }
 						icon={ <KeyIcon /> }
 					>
 						<div className="sidebar-content">
+							<input
+								type="text"
+								autoComplete="username"
+								style={ { display: 'none' } }
+								aria-hidden="true"
+								value="admin"
+								readOnly
+							/>
 							<InputField
 								id="gemini_key"
 								label={ __( 'Google Gemini', 'bearded-media' ) }
 								type="password"
+								autoComplete="new-password"
 								placeholder="••••••••••••"
 								value={ apiKeys.gemini_key }
 								onChange={ ( v ) =>
@@ -349,53 +576,31 @@ const App = () => {
 								onChange={ ( v ) => updateKey( 'bfl_key', v ) }
 							/>
 						</div>
-						<div
-							style={ {
-								marginTop: '2.5rem',
-								paddingTop: '2rem',
-								borderTop: '1px solid #f1f5f9',
-							} }
-						>
-							<button
-								onClick={ handleSave }
-								disabled={ isSaving }
-								className={ `sync-button ${
-									isSaving ? 'loading' : ''
-								}` }
-							>
-								{ isSaving ? (
-									<div
-										className="spinner"
-										style={ {
-											width: '1.25rem',
-											height: '1.25rem',
-											border: '2px solid white',
-											borderTopColor: 'transparent',
-											marginBottom: 0,
-										} }
-									></div>
-								) : (
-									__( 'Sync to Database', 'bearded-media' )
-								) }
-							</button>
-							<p
-								style={ {
-									marginTop: '1.5rem',
-									fontSize: '11px',
-									color: '#94a3b8',
-									textAlign: 'center',
-									lineHeight: '1.625',
-									padding: '0 1rem',
-								} }
-							>
-								{ __(
-									'Credentials are secured via WordPress nonces and the REST API permission callback.',
-									'bearded-media'
-								) }
-							</p>
-						</div>
 					</SectionCard>
-				</div>
+				) }
+			</div>
+
+			<div className="actions-footer">
+				<button
+					onClick={ handleSave }
+					disabled={ isSaving }
+					className={ `sync-button ${ isSaving ? 'loading' : '' }` }
+				>
+					{ isSaving ? (
+						<div
+							className="spinner"
+							style={ {
+								width: '1.25rem',
+								height: '1.25rem',
+								border: '2px solid white',
+								borderTopColor: 'transparent',
+								marginBottom: 0,
+							} }
+						></div>
+					) : (
+						__( 'Save Settings', 'bearded-media' )
+					) }
+				</button>
 			</div>
 		</div>
 	);
@@ -474,6 +679,7 @@ const InputField = ( {
 			value={ value }
 			onChange={ ( e ) => onChange( e.target.value ) }
 			placeholder={ placeholder }
+			autoComplete={ type === 'password' ? 'new-password' : 'off' }
 		/>
 	</div>
 );

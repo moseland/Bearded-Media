@@ -1,27 +1,28 @@
 {
-  "name": "bearded-media",
-  "version": "2.0.0",
-  "description": "AI Media Plugin",
-  "scripts": {
-    "build": "wp-scripts build",
-    "start": "wp-scripts start",
-    "lint:js": "wp-scripts lint-js",
-    "prepare": "husky install",
-    "test:php": "composer format && composer analyze && composer test",
-    "test": "npm run lint:js && npm run test:php"
-  },
-  "devDependencies": {
-    "@wordpress/scripts": "^27.0.0",
-    "husky": "^8.0.0",
-    "react": "^18.3.1"
-  },
-  "dependencies": {
-    "@wordpress/api-fetch": "^6.46.0",
-    "@wordpress/block-editor": "^15.9.0",
-    "@wordpress/components": "^23.0.0",
-    "@wordpress/compose": "^7.36.0",
-    "@wordpress/element": "^5.0.0",
-    "@wordpress/hooks": "^4.36.0",
-    "@wordpress/icons": "^11.3.0"
-  }
+	"name": "bearded-media",
+	"version": "2.0.0",
+	"description": "AI Media Tools for WordPress. Features client-side optimization, vision-based auto-tagging, and generative editing.",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js",
+		"prepare": "husky install",
+		"test:php": "composer format && composer analyze && composer test",
+		"test": "npm run lint:js && npm run test:php",
+		"plugin-zip": "npm run build && rm -rf dist-zip bearded-media.zip && mkdir -p dist-zip/bearded-media && rsync -a . dist-zip/bearded-media --exclude-from=.distignore --exclude='dist-zip' --exclude='bearded-media.zip' && (cd dist-zip && zip -r ../bearded-media.zip bearded-media) && rm -rf dist-zip"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^27.0.0",
+		"husky": "^8.0.0",
+		"react": "^18.3.1"
+	},
+	"dependencies": {
+		"@wordpress/api-fetch": "^6.46.0",
+		"@wordpress/block-editor": "^15.9.0",
+		"@wordpress/components": "^23.0.0",
+		"@wordpress/compose": "^7.36.0",
+		"@wordpress/element": "^5.0.0",
+		"@wordpress/hooks": "^4.36.0",
+		"@wordpress/icons": "^11.3.0"
+	}
 }

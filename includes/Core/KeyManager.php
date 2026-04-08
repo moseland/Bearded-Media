@@ -34,13 +34,13 @@ class KeyManager {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$this->register_default_keys();
+		add_action( 'init', array( $this, 'register_default_keys' ) );
 	}
 
 	/**
 	 * Defines the core keys needed for the plugin to function.
 	 */
-	private function register_default_keys(): void {
+	public function register_default_keys(): void {
 		$this->register_key( 'gemini_key', __( 'Google Gemini API Key', 'bearded-media' ), 'Core Vision' );
 		$this->register_key( 'stability_key', __( 'Stability AI API Key', 'bearded-media' ), 'AI Editor' );
 		$this->register_key( 'pexels_key', __( 'Pexels API Key', 'bearded-media' ), 'Stock Search' );

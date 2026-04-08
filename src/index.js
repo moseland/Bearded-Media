@@ -8,31 +8,45 @@ import StockPhotoModal from './components/StockPhotoModal';
 import EditImageModal from './components/EditImageModal';
 import BulkToolsModal from './components/BulkToolsModal';
 import { Button } from '@wordpress/components';
+import SettingsScreen from './components/SettingsScreen';
 
 console.log( 'Bearded Media: Index loaded.' );
 
 // Helpers
 const refreshLibrary = () => {
-	if ( typeof wp !== 'undefined' && wp.media && wp.media.frame ) {
-		if ( wp.media.frame.content.get() !== null ) {
-			wp.media.frame.content
-				.get()
-				.collection.props.set( { ignore: +new Date() } );
-		} else {
-			window.location.reload();
+	try {
+		if ( typeof wp !== 'undefined' && wp.media && wp.media.frame ) {
+			const content = wp.media.frame.content.get();
+			if ( content && content.collection && content.collection.props ) {
+				content.collection.props.set( { ignore: +new Date() } );
+				return;
+			}
+
+			// Fallback: Try to find any active collection
+			const state = wp.media.frame.state();
+			if ( state && state.get( 'library' ) ) {
+				state.get( 'library' ).props.set( { ignore: +new Date() } );
+				return;
+			}
 		}
-	} else {
-		window.location.reload();
+	} catch ( e ) {
+		console.warn(
+			'Bearded Media: Soft refresh failed, falling back to reload.',
+			e
+		);
 	}
+
+	// Hard fallback
+	window.location.reload();
 };
 
 const getCapabilities = () => {
 	return (
 		window.beardedMediaSettings?.capabilities || {
-			has_gemini: false,
-			has_stability: false,
-			has_pexels: false,
-			has_bfl: false,
+			gemini_key: false,
+			stability_key: false,
+			pexels_key: false,
+			bfl_key: false,
 		}
 	);
 };
@@ -82,8 +96,8 @@ const HeaderControls = () => {
 	const [ editAttributes, setEditAttributes ] = useState( null );
 
 	const caps = getCapabilities();
-	const canGenerate = caps.has_gemini || caps.has_stability || caps.has_bfl;
-	const canStock = caps.has_pexels;
+	const canGenerate = caps.gemini_key || caps.stability_key || caps.bfl_key;
+	const canStock = caps.pexels_key;
 
 	const handleSuccess = ( data ) => {
 		setIsGenOpen( false );
@@ -362,7 +376,7 @@ const setupObservers = () => {
 };
 
 // Initialize
-window.addEventListener( 'load', () => {
+domReady( () => {
 	// Setup Uploader Hook
 	if ( typeof wp !== 'undefined' && wp.Uploader ) {
 		setupUploaderInterceptor();
@@ -370,10 +384,16 @@ window.addEventListener( 'load', () => {
 
 	// Setup UI Injection
 	setupObservers();
-} );
 
-// Gutenberg Block Extensions
-domReady( () => {
+	// Render Settings Page if we are on it
+	const settingsContainer = document.getElementById(
+		'bearded-media-settings'
+	);
+	if ( settingsContainer ) {
+		render( <SettingsScreen />, settingsContainer );
+	}
+
+	// Gutenberg Block Extensions
 	if ( typeof wp !== 'undefined' && wp.hooks ) {
 		registerBlockExtension();
 		registerFeaturedImageExtension();

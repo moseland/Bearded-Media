@@ -1,0 +1,34 @@
+# Version Control & Hooks
+.git/
+.github/
+.husky/
+.gitignore
+
+# Development Tooling
+node_modules/
+vendor/
+composer.json
+composer.lock
+package.json
+package-lock.json
+phpstan.neon.dist
+phpcs.xml.dist
+webpack.config.js
+.eslintrc.js
+babel.config.js
+
+# Source & Tests
+src/
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Build Artifacts & Noise
+lint_results.json
+lint_results_fresh.json
+.distignore
+
+# OS
+.DS_Store
+Thumbs.db
+*.log

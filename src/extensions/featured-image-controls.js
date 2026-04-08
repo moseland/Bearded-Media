@@ -20,8 +20,8 @@ const withFeaturedImageAI = createHigherOrderComponent(
 			// Capabilities Check
 			const caps = window.beardedMediaSettings?.capabilities || {};
 			const canGenerate =
-				caps.has_gemini || caps.has_stability || caps.has_bfl;
-			const canStock = caps.has_pexels;
+				caps.gemini_key || caps.stability_key || caps.bfl_key;
+			const canStock = caps.pexels_key;
 
 			const { featuredImageId, featuredImage } = useSelect(
 				( select ) => {

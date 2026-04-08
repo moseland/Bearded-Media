@@ -122,8 +122,14 @@ const attachToUploader = ( uploaderInstance ) => {
 			return;
 		}
 
-		// Settings
-		const settings = window.beardedMediaSettings || {};
+		// Configuration & Service Settings
+		const rawData = window.beardedMediaSettings || {};
+		const settings = rawData.settings || {};
+
+		// Core logic depends on these being available either at top level or in settings
+		const restUrl = rawData.rest_url || settings.rest_url || '';
+		const nonce = rawData.nonce || settings.nonce || '';
+
 		const resizeEnabled =
 			settings.resize_enabled !== '0' &&
 			settings.resize_enabled !== false;
@@ -138,6 +144,9 @@ const attachToUploader = ( uploaderInstance ) => {
 			settings.strip_metadata === '1' || settings.strip_metadata === true;
 		const autoWebP =
 			settings.auto_webp === '1' || settings.auto_webp === true;
+
+		console.log( '--- Bearded Media Debug: Settings ---', settings );
+		console.log( '--- Bearded Media Debug: autoWebP ---', autoWebP );
 
 		// Determine target format
 		const targetFormat = autoWebP ? 'image/webp' : null;
@@ -191,12 +200,12 @@ const attachToUploader = ( uploaderInstance ) => {
 				} );
 
 				const res = await fetch(
-					settings.rest_url + 'bearded-media/v1/run-task',
+					restUrl + 'bearded-media/v1/run-task',
 					{
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
-							'X-WP-Nonce': wp.apiFetch.nonceMiddleware.nonce,
+							'X-WP-Nonce': nonce,
 						},
 						body: JSON.stringify( {
 							task: 'stability-upscale-fast',
@@ -258,13 +267,12 @@ const attachToUploader = ( uploaderInstance ) => {
 							.replace( /^data:image\/\w+;base64,/, '' );
 
 						const fillRes = await fetch(
-							settings.rest_url + 'bearded-media/v1/run-task',
+							restUrl + 'bearded-media/v1/run-task',
 							{
 								method: 'POST',
 								headers: {
 									'Content-Type': 'application/json',
-									'X-WP-Nonce':
-										wp.apiFetch.nonceMiddleware.nonce,
+									'X-WP-Nonce': nonce,
 								},
 								body: JSON.stringify( {
 									task: 'stability-inpaint',
@@ -283,7 +291,7 @@ const attachToUploader = ( uploaderInstance ) => {
 								const interval = setInterval( async () => {
 									try {
 										const check = await fetch(
-											`${ settings.rest_url }bearded-media/v1/check-task?task_id=${ fillRes.task_id }`
+											`${ restUrl }bearded-media/v1/check-task?task_id=${ fillRes.task_id }`
 										).then( ( r ) => r.json() );
 										if ( check.status === 'completed' ) {
 											clearInterval( interval );
@@ -418,6 +426,10 @@ const attachToUploader = ( uploaderInstance ) => {
 
 	// Intercept when files are added
 	uploaderInstance.bind( 'FilesAdded', ( up, files ) => {
+		console.log(
+			'--- Bearded Media Debug: FilesAdded Event ---',
+			files.length
+		);
 		// Filter out files that are already processed
 		// We must check BOTH the Plupload wrapper AND the underlying native file
 		const candidates = files.filter( ( file ) => {
@@ -476,30 +488,106 @@ const attachToUploader = ( uploaderInstance ) => {
 	uploaderInstance._beardedMediaAttached = true;
 };
 
+const scanForUploaders = () => {
+	console.log( '--- Bearded Media Debug: scanForUploaders ---' );
+
+	const tryAttach = ( obj, label ) => {
+		if ( obj && ( obj.bind || obj.uploader ) ) {
+			console.log(
+				`--- Bearded Media Debug: Found ${ label }, attempting attach ---`
+			);
+			attachToUploader( obj );
+		}
+	};
+
+	// 1. Raw Plupload Queue
+	if (
+		typeof plupload !== 'undefined' &&
+		plupload.Uploader &&
+		plupload.Uploader.queue
+	) {
+		plupload.Uploader.queue.forEach( ( up ) =>
+			tryAttach( up, 'plupload.Uploader.queue' )
+		);
+	}
+
+	// 2. WP Uploader Queue
+	if ( typeof wp !== 'undefined' && wp.Uploader && wp.Uploader.queue ) {
+		wp.Uploader.queue.forEach( ( up ) =>
+			tryAttach( up, 'wp.Uploader.queue' )
+		);
+	}
+
+	// 3. Media Frame Uploaders
+	if ( typeof wp !== 'undefined' && wp.media ) {
+		if ( wp.media.frame && wp.media.frame.uploader ) {
+			tryAttach( wp.media.frame.uploader, 'wp.media.frame.uploader' );
+		}
+		// Check all open frames
+		if ( wp.media.frames ) {
+			Object.values( wp.media.frames ).forEach( ( frame ) => {
+				if ( frame.uploader ) {
+					tryAttach( frame.uploader, 'wp.media.frames iteration' );
+				}
+			} );
+		}
+	}
+
+	// 4. Global jQuery-bound uploaders (Fallback)
+	if ( typeof window.jQuery !== 'undefined' ) {
+		window.jQuery( '.plupload-upload-uI' ).each( function () {
+			const up = window.jQuery( this ).data( 'uploader' );
+			if ( up ) {
+				tryAttach( up, 'jQuery data-uploader' );
+			}
+		} );
+	}
+};
+
 const setupUploaderInterceptor = () => {
+	console.log(
+		'--- Bearded Media Debug: setupUploaderInterceptor Calling ---'
+	);
+
 	if ( typeof plupload === 'undefined' ) {
+		console.log(
+			'--- Bearded Media Debug: plupload undefined, retrying... ---'
+		);
 		setTimeout( setupUploaderInterceptor, 1000 );
 		return;
 	}
 
-	const originalInit = plupload.Uploader.prototype.init;
+	// Hook into Plupload prototype
+	const originalPluploadInit = plupload.Uploader.prototype.init;
 	plupload.Uploader.prototype.init = function () {
+		console.log(
+			'--- Bearded Media Debug: Plupload prototype init hook ---'
+		);
 		attachToUploader( this );
-		return originalInit.apply( this, arguments );
+		return originalPluploadInit.apply( this, arguments );
 	};
 
-	if ( typeof wp !== 'undefined' && wp.Uploader && wp.Uploader.queue ) {
-		wp.Uploader.queue.forEach( ( uploader ) =>
-			attachToUploader( uploader )
-		);
+	// Hook into WP Uploader if available
+	if (
+		typeof wp !== 'undefined' &&
+		wp.Uploader &&
+		wp.Uploader.prototype &&
+		wp.Uploader.prototype.init
+	) {
+		const originalWpInit = wp.Uploader.prototype.init;
+		wp.Uploader.prototype.init = function () {
+			console.log(
+				'--- Bearded Media Debug: wp.Uploader prototype init hook ---'
+			);
+			const res = originalWpInit.apply( this, arguments );
+			attachToUploader( this );
+			return res;
+		};
 	}
 
-	if ( typeof wp !== 'undefined' && wp.media && wp.media.frame ) {
-		setTimeout( () => {
-			if ( wp.media.frame.uploader && wp.media.frame.uploader.uploader ) {
-				attachToUploader( wp.media.frame.uploader.uploader );
-			}
-		}, 500 );
+	// Periodic scans for the first 10 seconds (Media library often lazy-loads)
+	for ( let i = 0; i < 10; i++ ) {
+		setTimeout( scanForUploaders, i * 1000 );
 	}
 
 	console.log( 'Bearded Media: Uploader interceptor ready.' );

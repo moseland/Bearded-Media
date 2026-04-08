@@ -186,8 +186,6 @@ class VisionProcessor {
 			$update['post_excerpt'] = sanitize_text_field( $data['caption'] );
 		}
 
-		// Note: We don't update post_title here if we are about to rename the file,
-		// as the rename function handles the title.
 		wp_update_post( $update );
 
 		if ( ! empty( $data['alt_text'] ) ) {
