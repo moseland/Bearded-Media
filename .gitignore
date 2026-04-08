@@ -1,0 +1,43 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.eslintcache
+.stylelintcache
+
+# Composer
+vendor/
+
+# WordPress @wordpress/scripts
+build/
+*.asset.php
+
+# PHP
+.phpunit.result.cache
+.phpcs.xml
+phpstan.neon
+phpstan-baseline.neon
+
+# Husky
+.husky/_
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.project
+.settings/
+.buildpath
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log

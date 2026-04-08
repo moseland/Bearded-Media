@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running pre-commit quality checks..."
+
+echo "Checking Coding Standards..."
+composer format
+if [ $? -ne 0 ]; then
+  echo "[ERROR] PHPCS failed. Fix coding standards before committing."
+  exit 1
+fi
+
+echo "Running Static Analysis..."
+composer analyze
+if [ $? -ne 0 ]; then
+  echo "[ERROR] PHPStan found errors. Fix types/logic before committing."
+  exit 1
+fi
+
+echo "Linting JavaScript..."
+npm run lint:js
+if [ $? -ne 0 ]; then
+  echo "[ERROR] JS Linting failed. Fix React/JS errors before committing."
+  exit 1
+fi
+
+echo "All checks passed. Committing code...
