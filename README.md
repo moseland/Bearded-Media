@@ -46,6 +46,15 @@ Bearded Media is a WordPress plugin designed to improve media management through
 -   **`composer format`**: Check and fix code style issues using PHP_CodeSniffer (WordPress standard).
 -   **`composer test`**: Run the test suite (Pest/PHPUnit).
 -   **`npm test`**: Runs both JS lints and PHP tests in a single command.
+-   **`npm run prepare`**: Manually initialize Husky git hooks.
+
+### Git Hooks (Husky)
+This project uses **Husky**. The following checks run automatically on every `git commit`:
+-   **PHP Checkstyle**: `composer format`
+-   **Static Analysis**: `composer analyze`
+-   **JavaScript Linting**: `npm run lint:js`
+
+If any of these checks fail, the commit will be blocked until the issues are resolved.
 
 ## Deployment Instructions
 
@@ -64,41 +73,29 @@ composer install --no-dev --optimize-autoloader
 ```
 
 ### 3. Package the Plugin
-When deploying, exclude files and directories that are not required for the production environment. 
+You can use the built-in script to generate a production-ready zip file:
+```bash
+npm run plugin-zip
+```
+This script automates the build process, respects `.distignore`, and generates `bearded-media.zip`.
 
-**Recommended exclusions:**
--   `.git/`
--   `.husky/`
--   `node_modules/`
--   `src/` (Source files are compiled into `build/`)
--   `tests/`
--   `.eslintrc.js`
--   `babel.config.js`
--   `composer.json` & `composer.lock`
--   `package.json` & `package-lock.json`
--   `phpstan.neon.dist`
--   `phpunit.xml`
--   `webpack.config.js`
+### 4. Automated GitHub Releases
+This project is configured with GitHub Actions to automate releases. When you are ready to publish:
+1.  Push a new tag following the versioning format (e.g., `v2.0.1`):
+    ```bash
+    git tag v2.0.1
+    git push origin v2.0.1
+    ```
+2.  The `release.yml` workflow will automatically:
+    -   Run the full test suite.
+    -   Build all frontend assets.
+    -   Package the plugin into a zip file named `bearded-media-v2.0.1.zip`.
+    -   Create a new GitHub Release with the zip asset attached.
 
-### 4. Upload to Server
-Upload the resulting `bearded-media` folder to your server's `wp-content/plugins/` directory via SFTP or your preferred CI/CD pipeline.
+### 5. Manual Upload
+If not using GitHub releases, upload the resulting `bearded-media` folder or zip to your server's `wp-content/plugins/` directory.
 
 ---
-
-## Directory Structure
-
-```text
-bearded-media/
-├── build/             # Compiled production assets
-├── includes/          # PHP core logic (Namespaced: BeardedMedia\)
-│   ├── API/           # REST API Handlers
-│   ├── Core/          # Plugin initialization and core hooks
-│   └── Media/         # AI Processing and Vision logic
-├── src/               # React and SCSS source files
-├── tests/             # Pest and PHPUnit tests
-├── bearded-media.php  # Main plugin entry point
-└── vendor/            # Composer dependencies
-```
 
 ## License
 This project is licensed under the GPL-2.0-or-later License.

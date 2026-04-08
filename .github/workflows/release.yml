@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Dependencies (PHP & JS)
         run: |
-          composer install --no-dev --optimize-autoloader
+          composer install --optimize-autoloader
           npm install
 
       - name: Run Tests
