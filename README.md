@@ -3,7 +3,9 @@
 [![WordPress Version](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg?style=flat-square)](https://wordpress.org/)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-purple.svg?style=flat-square)](https://www.php.net/)
 [![Node Version](https://img.shields.io/badge/Node.js-18.x%2B-green.svg?style=flat-square)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/License-GPL--2.0--or--later-orange.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 
 **Bearded Media** is a modern WordPress plugin designed to seamlessly bring state-of-the-art Generative AI capabilities, including Image, Video and Text generation, to your media library and block editor workspace. It includes advanced AI image editing, auto-tagging, optimization, and stock asset discovery tools.
 
