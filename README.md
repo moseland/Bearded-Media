@@ -25,10 +25,9 @@ Speed up content creation with rich, on-demand text generation inside the Gutenb
 - **Flexible Model Selection**: Instantly prompt and generate content using configured LLMs (e.g. Gemini, OpenRouter-hosted models).
 - **In-Place Insertion**: Review the generated content inside a dedicated overlay and insert it directly into the block editor at your current cursor position with a single click.
 
-### Generative Image Editing & SAM Segmentation
+### Generative Image Editing
 Enhance and modify existing imagery in-place without external design tools.
 - **Generative Fills & Styles**: Inpaint, outpaint, remove backgrounds, or alter styles using advanced generative models (Stability AI, Flux/Black Forest Labs, Gemini).
-- **Segment Anything Model (SAM)**: Uses Meta's SAM VPS pipeline to calculate precise, click-to-select mask boundaries dynamically on a visual canvas.
 - **AI Upscaling**: Automatically or manually upscale low-resolution image files to high-fidelity versions.
 
 ### Vision-Based Auto-Tagging & Accessibility
